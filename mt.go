@@ -11,7 +11,6 @@ import (
 	"image/jpeg"
 	"image/png"
 	"os"
-	"strconv"
 	"strings"
 )
 
@@ -48,12 +47,15 @@ func (p *Plot) AddData(data ...DataValue) {
 func (p *Plot) SaveDataInImage(width, height int) {
 	p.img = image.NewRGBA(image.Rect(0, 0, width, height))
 	draw.Draw(p.img, p.img.Bounds(), &image.Uniform{C: color.RGBA{R: 255, G: 255, B: 255, A: 0}}, image.ZP, draw.Src)
+
 	maxValY := getMaxValY(p.data)
 	maxValX := getMaxValX(p.data)
+	minValY := getMinValY(p.data)
+	minValX := getMinValX(p.data)
 
-	dataLen := len(p.data)
+	//dataLen := len(p.data)
 
-	numWidth := len(strconv.Itoa(int(p.data[maxValY].Y)))*charWidth + 2
+	numWidth := len(fmt.Sprintf("%d", maxValY.Y))*charWidth + 2
 
 	drawLine(p.img, blue, numWidth, 0, numWidth, height-bottomPad)
 	drawLine(p.img, blue, numWidth, height-bottomPad, width, height-bottomPad)
@@ -65,58 +67,40 @@ func (p *Plot) SaveDataInImage(width, height int) {
 		Dot:  fixed.Point26_6{X: fixed.I(2), Y: fixed.I(10)},
 	}
 
-	// set of Y
-	toSortY := make([]DataValue, dataLen)
-	copy(toSortY, p.data)
-	fmt.Println(toSortY)
-	var minValY DataValue
-	for i, v := range sortValues(toSortY, "Y") {
-		if i == 0 {
-			minValY = v
-		}
-		ns := fmt.Sprintf("%d", v.Y)
-		lns := len(ns)
-		x := numWidth - lns*charWidth
-		y := int(float64(height) - float64(height-bottomPad-charHeight)*float64(v.Y-minValY.Y)/float64(p.data[maxValY].Y-minValY.Y) - float64(bottomPad))
-
-		d.Dot = fixed.Point26_6{X: fixed.I(x - 1), Y: fixed.I(y + charHeight/2)}
-		d.DrawString(ns)
-
-		drawLine(p.img, blue, x+lns*charWidth-2, y, x+lns*charWidth+2, y)
-
-	}
-
-	// set of X
-	toSortX := make([]DataValue, dataLen)
-	copy(toSortX, p.data)
-
-	var minValX DataValue
-
-	for i, v := range sortValues(toSortX, "X") {
-		if i == 0 {
-			minValX = v
-		}
-		ns := fmt.Sprintf("%d", v.X)
-		lns := len(ns)
-
-		x := int(float64(width-numWidth-charWidth*2)*float64(v.X-minValX.X)/float64(p.data[maxValX].X-minValX.X) + float64(numWidth-1))
-		y := height - charHeight + 5
-		fmt.Println(v, x)
-		d.Dot = fixed.Point26_6{X: fixed.I(x - 2), Y: fixed.I(y + 2)}
-		d.DrawString(ns)
-
-		drawLine(p.img, blue, x+lns, y-charHeight, x+lns, y-charHeight-4)
-
-	}
-
 	// set plot
-	for i := 1; i < dataLen; i++ {
-		drawLine(p.img, black,
-			int(float64(width-numWidth-charWidth*2)*float64(p.data[i-1].X-minValX.X)/float64(p.data[maxValX].X-minValX.X)+float64(numWidth)),
-			int(float64(height)-float64(height-bottomPad-charHeight)*float64(p.data[i-1].Y-minValY.Y)/float64(p.data[maxValY].Y-minValY.Y)-float64(bottomPad)),
-			int(float64(width-numWidth-charWidth*2)*float64(p.data[i].X-minValX.X)/float64(p.data[maxValX].X-minValX.X)+float64(numWidth)),
-			int(float64(height)-float64(height-bottomPad-charHeight)*float64(p.data[i].Y-minValY.Y)/float64(p.data[maxValY].Y-minValY.Y)-float64(bottomPad)),
-		)
+
+	var xLast, yLast int
+
+	for i := range p.data {
+		x := int(float64(width-numWidth-charWidth*2)*float64(p.data[i].X-minValX.X)/float64(maxValX.X-minValX.X) + float64(numWidth))
+		y := int(float64(height) - float64(height-bottomPad-charHeight)*float64(p.data[i].Y-minValY.Y)/float64(maxValY.Y-minValY.Y) - float64(bottomPad))
+
+		// num of Y
+		ns := fmt.Sprintf("%d", p.data[i].Y)
+		lns := len(ns)
+
+		d.Dot.X = fixed.I(numWidth - lns*charWidth - 1)
+		d.Dot.Y = fixed.I(y)
+
+		d.DrawString(ns)
+		drawLine(p.img, blue, numWidth-2, y, numWidth+2, y)
+
+		//num of X
+		ns = fmt.Sprintf("%d", p.data[i].X)
+		lns = len(ns)
+
+		d.Dot.X = fixed.I(x - 2)
+		d.Dot.Y = fixed.I(height - charHeight + 7)
+
+		d.DrawString(ns)
+		drawLine(p.img, blue, x+lns-1, height-charHeight*2+5, x+lns-1, height-charHeight*2+1)
+
+		// draw line
+		if i != 0 {
+			drawLine(p.img, black, xLast, yLast, x, y)
+		}
+
+		xLast, yLast = x, y
 
 	}
 }

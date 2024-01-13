@@ -1,23 +1,43 @@
 package mt
 
-func getMaxValY(values []DataValue) int {
+func getMaxValY(values []DataValue) DataValue {
 	var m int
 	for i, v := range values {
 		if v.Y > values[m].Y {
 			m = i
 		}
 	}
-	return m
+	return values[m]
 }
 
-func getMaxValX(values []DataValue) int {
+func getMaxValX(values []DataValue) DataValue {
 	var m int
 	for i, v := range values {
 		if v.X > values[m].X {
 			m = i
 		}
 	}
-	return m
+	return values[m]
+}
+
+func getMinValY(values []DataValue) DataValue {
+	var m int
+	for i, v := range values {
+		if v.Y < values[m].Y {
+			m = i
+		}
+	}
+	return values[m]
+}
+
+func getMinValX(values []DataValue) DataValue {
+	var m int
+	for i, v := range values {
+		if v.X < values[m].X {
+			m = i
+		}
+	}
+	return values[m]
 }
 
 func sortValues(arr []DataValue, by string) []DataValue {
