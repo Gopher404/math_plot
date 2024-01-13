@@ -46,7 +46,7 @@ func (p *Plot) AddData(data ...DataValue) {
 
 func (p *Plot) SaveDataInImage(width, height int) {
 	p.img = image.NewRGBA(image.Rect(0, 0, width, height))
-	draw.Draw(p.img, p.img.Bounds(), &image.Uniform{C: color.RGBA{R: 255, G: 255, B: 255, A: 0}}, image.ZP, draw.Src)
+	draw.Draw(p.img, p.img.Bounds(), &image.Uniform{C: color.RGBA{R: 255, G: 255, B: 255, A: 0}}, image.Point{}, draw.Src)
 
 	maxValY := getMaxValY(p.data)
 	maxValX := getMaxValX(p.data)
@@ -72,8 +72,8 @@ func (p *Plot) SaveDataInImage(width, height int) {
 	var xLast, yLast int
 
 	for i := range p.data {
-		x := int(float64(width-numWidth-charWidth*2)*float64(p.data[i].X-minValX.X)/float64(maxValX.X-minValX.X) + float64(numWidth))
-		y := int(float64(height) - float64(height-bottomPad-charHeight)*float64(p.data[i].Y-minValY.Y)/float64(maxValY.Y-minValY.Y) - float64(bottomPad))
+		x := int(float32(width-numWidth-charWidth*2)*float32(p.data[i].X-minValX.X)/float32(maxValX.X-minValX.X) + float32(numWidth))
+		y := int(float32(height) - float32(height-bottomPad-charHeight)*float32(p.data[i].Y-minValY.Y)/float32(maxValY.Y-minValY.Y) - float32(bottomPad))
 
 		// num of Y
 		ns := fmt.Sprintf("%d", p.data[i].Y)
